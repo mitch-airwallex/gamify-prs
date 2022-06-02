@@ -1,6 +1,9 @@
 package com.airwallex.corebanking.gamifyprs.gitlab
 
+import com.airwallex.corebanking.gamifyprs.GITLAB_URL
+import com.airwallex.corebanking.gamifyprs.PROJECT_ID
 import com.airwallex.corebanking.gamifyprs.model.MergeRequest
+import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
@@ -20,17 +23,46 @@ import java.time.Duration
 @Component
 class GitLabClient(
     @Value("\${application.accessToken}")
-    val accessToken: String
+    val accessToken: String,
+    val restTemplate: RestTemplate
 ) {
 
-    fun restTemplate(): RestTemplate = RestTemplateBuilder()
-        .setConnectTimeout(Duration.ofSeconds(10))
-        .build()
+    fun getApprovals(mergedRequestId: String): List<User> {
+        val headers = HttpHeaders()
+        headers.set("PRIVATE-TOKEN", accessToken)
 
-    fun getMergeRequests(): List<MergeRequest>? {
-        val request = HttpEntity(createHeaders().toMap())
+        val requestEntity = HttpEntity<Unit>(headers)
+
+        return restTemplate.exchange(
+            getApprovalsFullPath(mergedRequestId),
+            HttpMethod.GET,
+            requestEntity,
+            GetApprovalsResponse::class.java
+        ).body?.approved_by?.map { it.user } ?: listOf()
+    }
+
+    private fun getApprovalsFullPath(mergedRequestId: String) =
+        "$GITLAB_URL/projects/$PROJECT_ID/merge_requests/$mergedRequestId/approvals"
+
+    data class GetApprovalsResponse(
+        val approved_by: List<Entity>
+    )
+
+    data class Entity(
+        val user: User
+    )
+
+    data class User(
+        val name: String,
+        val username: String,
+        val avatar_url: String,
+        val id: Int
+    )
+
+    fun getMergeRequests(): List<MergeRequest> {
+        val request = HttpEntity<Unit>(createHeaders())
         val responseEntity = try {
-            restTemplate().exchange(
+            restTemplate.exchange(
                 createUri(),
                 HttpMethod.GET,
                 request,
@@ -41,7 +73,8 @@ class GitLabClient(
             ResponseEntity.status(e.rawStatusCode).build()
         }
 
-        return responseEntity.body?.asList()
+        println(responseEntity)
+        return responseEntity.body?.toList() ?: emptyList()
     }
 
     private fun createHeaders(): HttpHeaders {
@@ -51,7 +84,7 @@ class GitLabClient(
     }
 
     private fun createUri(): String {
-        val uri = UriComponentsBuilder.fromHttpUrl("https://gitlab.awx.im/api/v4/projects/844/")
+        val uri = UriComponentsBuilder.fromHttpUrl("https://gitlab.awx.im/api/v4/projects/844/merge_requests/")
             .queryParam("scope", "all")
             .queryParam("state", "merged")
             .queryParam("approved_by_ids", "Any")
@@ -61,4 +94,8 @@ class GitLabClient(
         println(uri)
         return uri
     }
+
+    data class GetMergeRequestsResponse(
+        val mergedRequests: List<MergeRequest>
+    )
 }

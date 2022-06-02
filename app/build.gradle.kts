@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(Config.Libs.JACKSON_KOTLIN)
     implementation(Config.Libs.SPRING_BOOT_WEB_STARTER)
 }
 

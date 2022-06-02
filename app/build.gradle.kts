@@ -3,11 +3,12 @@ plugins {
 }
 
 dependencies {
+    implementation(Config.Libs.JACKSON_KOTLIN)
     implementation(Config.Libs.SPRING_BOOT_WEB_STARTER)
 }
 
 springBoot {
-    mainClassName = "com.airwallex.financial.transaction.FinancialTransactionApplicationKt"
+    mainClassName = "com.airwallex.corebanking.gamifyprs.AppKt"
 }
 
 tasks {

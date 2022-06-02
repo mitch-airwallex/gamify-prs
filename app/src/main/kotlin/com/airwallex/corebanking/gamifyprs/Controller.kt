@@ -7,8 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 
 @Controller
 @RequestMapping("/things")
-class Controller {
+class Controller(val gitLabClient: GitLabClient) {
 
     @GetMapping
-    fun getEverything(): ResponseEntity<List<Int>> = ResponseEntity.ok(listOf(5))
+    fun getEverything(): ResponseEntity<List<GitLabClient.User>> =
+        gitLabClient.getMergedRequests()
+            .flatMap { gitLabClient.getApprovals(it.mergeRequestId) }
+            .let { ResponseEntity.ok(it) }
 }

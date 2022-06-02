@@ -1,9 +1,5 @@
 
-import Config.Versions.SPRING_CLOUD_VERSION
-import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension
-import kotlin.script.experimental.jvm.util.hasParentNamed
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 plugins {
     idea
@@ -21,10 +17,13 @@ apply(plugin = "io.spring.dependency-management")
 allprojects {
     repositories {
         mavenCentral()
-        jcenter()
         mavenLocal()
     }
 }
+
+java.sourceCompatibility = JavaVersion.VERSION_11
+java.targetCompatibility = JavaVersion.VERSION_11
+
 
 subprojects {
 
@@ -38,12 +37,9 @@ subprojects {
         useJUnitPlatform()
     }
 
-    the<DependencyManagementExtension>().apply {
-        imports {
-            mavenBom(SpringBootPlugin.BOM_COORDINATES) {
-                bomProperty("kotlin.version", Config.Versions.KOTLIN)
-            }
-            mavenBom("org.springframework.cloud:spring-cloud-dependencies:$SPRING_CLOUD_VERSION")
+    tasks.withType(KotlinCompile::class.java).all {
+        kotlinOptions {
+            jvmTarget = "1.8"
         }
     }
 

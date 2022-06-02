@@ -7,7 +7,7 @@ dependencies {
 }
 
 springBoot {
-    mainClassName = "com.airwallex.financial.transaction.FinancialTransactionApplicationKt"
+    mainClassName = "com.airwallex.corebanking.gamifyprs.AppKt"
 }
 
 tasks {

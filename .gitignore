@@ -10,3 +10,5 @@ build
 config/detekt
 
 out
+
+**/application.yml
